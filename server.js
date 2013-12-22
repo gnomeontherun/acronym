@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var mongoosePagination = require('mongoose-pagination');
 
 app.use(express.methodOverride());
+app.use(express.bodyParser());
 app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -35,6 +36,18 @@ function quote(str) {
   return str.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\");
 }
 
+app.post('/acronym', function (req, res) {
+  if (req.body._id) {
+    acronym.update({_id: req.body._id}, req.body, function (err, acronym) {
+      res.send(acronym);
+    });
+  } else {
+    acronym.create(req.body, function (err, acronym) {
+      res.send(acronym);
+    });
+  }
+});
+
 app.get('/acronyms', function (req, res) {
   var find = {};
   var page = 1;
@@ -46,7 +59,7 @@ app.get('/acronyms', function (req, res) {
   }
   acronym.find(find)
   .sort({acronym: 1})
-  .paginate(page, 1, function (err, acronyms, total) {
+  .paginate(page, 10, function (err, acronyms, total) {
     if (err) {
       res.send(500);
     }
@@ -54,7 +67,7 @@ app.get('/acronyms', function (req, res) {
       items: acronyms,
       total: total,
       page: page,
-      pages: Math.ceil(total / page)
+      pages: Math.ceil(total / 10)
     };
     res.send(results);
   })
